@@ -1,18 +1,17 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import UserRoute from './routes/User';
-// import productRoute from './routes/Product';
-// import orderRoute from './routes/Order';
 import cors from 'cors';
+import swaggerUi from 'swagger-ui-express';
+
 const app = express();
+const port = 3000;
+
 app.use(bodyParser.json());
 app.use(cors());
 app.use('/api/user', UserRoute);
-// app.use('/api/product', productRoute);
-// app.use('/api/order', orderRoute);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(require('./swagger.json')));
 
-
-const port = 3000;
 app.listen(port, () => {
   console.log(`Servidor iniciado na porta ${port}.`);
 });
