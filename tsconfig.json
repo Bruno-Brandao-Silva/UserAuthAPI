@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "module": "commonjs",
+    "outDir": "dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "typeRoots": [
+      "node_modules/@types/",
+      "@types"
+    ],
+  },
+  "typedocOptions": {
+    "entryPoints": ["src/app.ts"],
+    "out": "docs"
+  },
+  "include": [
+    "src/**/*"
+  ]
+}
