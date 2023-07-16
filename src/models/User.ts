@@ -1,117 +1,57 @@
-import { ObjectId, Collection } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import Database from './Database';
 
-/**
- * Representa um usuário.
- */
+
 class User {
-    /**
-     * A coleção "users" no banco de dados MongoDB.
-     */
-    private static collection = Database.getInstance().getDB().collection('users');;
-
-    /**
-     * O ID do usuário.
-     */
-    id: ObjectId;
-
-    /**
-     * O nome do usuário.
-     */
+    private static collection = 'users';
+    private static db = new Database();
+    _id?: ObjectId;
     name: string;
-
-    /**
-     * O email do usuário.
-     */
     email: string;
-
-    /**
-     * A senha do usuário.
-     */
     password: string;
 
-    /**
-     * Cria uma instância de User.
-     * @param id - O ID do usuário.
-     * @param name - O nome do usuário.
-     * @param email - O email do usuário.
-     * @param password - A senha do usuário.
-     */
-    constructor(id: ObjectId, name: string, email: string, password: string) {
-        this.id = id;
+    constructor(name: string, email: string, password: string, id?: ObjectId | string) {
+        this._id = id ? new ObjectId(id) : undefined;
         this.name = name;
         this.email = email;
         this.password = password;
     }
 
-    /**
-     * Salva o usuário no banco de dados.
-     * @returns Uma Promise que é resolvida quando a operação for concluída.
-     */
-    async save(): Promise<void> {
-        await User.collection.insertOne({
-            _id: this.id,
+    async register(): Promise<ObjectId | null> {
+        const result = await User.db.insertOne(User.collection, {
             name: this.name,
             email: this.email,
             password: this.password,
         });
+        return result.acknowledged ? result.insertedId : null;
     }
 
-    /**
-     * Atualiza o usuário no banco de dados.
-     * @returns Uma Promise que é resolvida quando a operação for concluída.
-     */
     async update(): Promise<void> {
-        await User.collection.updateOne(
-            { _id: this.id },
-            { $set: { name: this.name, email: this.email, password: this.password } }
-        );
+        await User.db.updateOne(User.collection, { _id: this._id }, { name: this.name, email: this.email, password: this.password });
     }
 
-    /**
-     * Exclui o usuário do banco de dados.
-     * @returns Uma Promise que é resolvida quando a operação for concluída.
-     */
-    async delete(): Promise<void> {
-        await User.collection.deleteOne({ _id: this.id });
+    static async delete(id: string): Promise<void> {
+        await User.db.deleteOne(User.collection, { _id: new ObjectId(id) });
     }
 
-    /**
-     * Busca um usuário pelo ID.
-     * @param id - O ID do usuário.
-     * @returns Uma Promise que é resolvida com o usuário encontrado ou null se não for encontrado.
-     */
-    static async findById(id: ObjectId | string): Promise<User | null> {
-        if (typeof id === 'string') {
-            id = new ObjectId(id);
-        }
-        const user = await User.collection.findOne({ _id: id });
+    static async findById(id: string): Promise<User | null> {
+
+        const user = await this.db.findById(User.collection, id);
         if (user) {
-            return new User(user._id, user.name, user.email, user.password);
+            return new User(user.name, user.email, user.password, user._id);
         }
         return null;
     }
-
-    /**
-     * Busca um usuário pelo email.
-     * @param email - O email do usuário.
-     * @returns Uma Promise que é resolvida com o usuário encontrado ou null se não for encontrado.
-     */
-    static async findByEmail(email: string): Promise<User | null> {
-        const user = await User.collection.findOne({ email });
+    static async login(email: string, password: string): Promise<User | null> {
+        const user = await this.db.findOne(User.collection, { email, password });
         if (user) {
-            return new User(user._id, user.name, user.email, user.password);
+            return new User(user.name, user.email, user.password, user._id);
         }
         return null;
     }
-
-    /**
-     * Busca todos os usuários.
-     * @returns Uma Promise que é resolvida com uma lista de todos os usuários.
-     */
     static async findAll(): Promise<User[]> {
-        const users = await User.collection.find().toArray();
-        return users.map(user => new User(user._id, user.name, user.email, user.password));
+        const users = await this.db.find(User.collection);
+        return users.map(user => new User(user.name, user.email, user.password, user.id));
     }
 }
 
