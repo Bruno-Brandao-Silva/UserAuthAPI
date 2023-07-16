@@ -5,29 +5,73 @@ const router = Router();
 
 router.post('/register', async (req: Request, res: Response) => {
   try {
-    const { id, name, email, password } = req.body;
+    const { name, email, password } = req.body;
 
-    const user = new User(id, name, email, password);
-    await user.save();
+    const id = await new User(name, email, password).register();
 
-    res.status(201).json({ message: 'Usuário registrado com sucesso' });
+    id ? res.status(201).json({ message: 'Usuário registrado com sucesso', id }) : new Error('Erro ao registrar usuário');
   } catch (error) {
     console.error('Erro ao registrar usuário:', error);
-    res.status(500).json({ error: 'Ocorreu um erro ao registrar o usuário' });
+    res.status(500).end();
   }
 });
 
-router.get('/users', async (req: Request, res: Response) => {
+router.post('/login', async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.login(email, password);
+    if (user) {
+      res.status(200).json({ message: 'Usuário autenticado com sucesso' });
+    } else {
+      res.status(401).end();
+    }
+  } catch (error) {
+    console.error('Erro ao autenticar usuário:', error);
+    res.status(500).end();
+  }
+});
+
+router.put('/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { name, email, password } = req.body;
+
+    const user = new User(name, email, password, id);
+    await user.update();
+
+    res.status(200).json({ message: 'Usuário atualizado com sucesso' });
+  } catch (error) {
+    console.error('Erro ao atualizar usuário:', error);
+    res.status(500).end();
+  }
+
+});
+
+router.delete('/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const user = await User.delete(id);
+
+    res.status(200).json({ message: 'Usuário excluído com sucesso' });
+  } catch (error) {
+    console.error('Erro ao excluir usuário:', error);
+    res.status(500).end();
+  }
+});
+
+router.get('/all', async (req: Request, res: Response) => {
   try {
     const users = await User.findAll();
     res.status(200).json(users);
   } catch (error) {
     console.error('Erro ao obter usuários:', error);
-    res.status(500).json({ error: 'Ocorreu um erro ao obter os usuários' });
+    res.status(500).end();
   }
 });
 
-router.get('/users/:id', async (req: Request, res: Response) => {
+router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const user = await User.findById(id);
@@ -35,11 +79,11 @@ router.get('/users/:id', async (req: Request, res: Response) => {
     if (user) {
       res.status(200).json(user);
     } else {
-      res.status(404).json({ message: 'Usuário não encontrado' });
+      res.status(404).end();
     }
   } catch (error) {
     console.error('Erro ao obter usuário:', error);
-    res.status(500).json({ error: 'Ocorreu um erro ao obter o usuário' });
+    res.status(500).end();
   }
 });
 
