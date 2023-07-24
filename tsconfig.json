@@ -13,5 +13,8 @@
   },
   "include": [
     "src/**/*"
+  ],
+  "files": [
+    "src/Types.d.ts" 
   ]
 }
