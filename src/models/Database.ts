@@ -76,7 +76,6 @@ class Database {
             return result;
         });
     }
-    // Exemplo de função para inserir um documento em uma coleção
     public async insertOne<T extends Document>(
         collectionName: string,
         document: OptionalUnlessRequiredId<T>
@@ -87,7 +86,6 @@ class Database {
         });
     }
 
-    // Exemplo de função para inserir múltiplos documentos em uma coleção
     public async insertMany<T extends Document>(
         collectionName: string,
         documents: OptionalUnlessRequiredId<T>[]
@@ -98,7 +96,6 @@ class Database {
         });
     }
 
-    // Exemplo de função para atualizar um documento em uma coleção
     public async updateOne<T extends Document>(
         collectionName: string,
         filter: Filter<T>,
@@ -110,7 +107,6 @@ class Database {
         });
     }
 
-    // Exemplo de função para excluir um documento de uma coleção
     public async deleteOne<T extends Document>(
         collectionName: string,
         filter: Filter<T>
@@ -121,7 +117,6 @@ class Database {
         });
     }
 
-    // Exemplo de função para buscar um documento por ID em uma coleção
     public async findById<T extends Document>(
         collectionName: string,
         id: string
