@@ -1,27 +1,32 @@
 import { NextFunction, Response, Request } from 'express';
-import jwt from 'jsonwebtoken';
+import jwt, { JsonWebTokenError } from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import { CustomRequest } from '../types';
+import User from '../models/User';
 
 dotenv.config();
 
-const SECRET = process.env.SECRET!;
+const SECRET = process.env.SECRET_KEY!;
 
-export function verifyJWT(req: Request, res: Response, next: NextFunction) {
-    // const token = req.headers['x-access-token'] as string;
+export async function verifyJWT(req: Request, res: Response, next: NextFunction) {
     const token = req.cookies.token;
     if (!token) return res.status(401).json({ message: 'Nenhum token encontrado.' });
 
     try {
-        const decoded = jwt.verify(token, SECRET);
-        console.log(decoded);
-        // req.token = token;
-        // req.user = decoded;
+        const user = jwt.verify(token, SECRET) as User;
+        req.userId = String(user._id);
+        // É possivel adicionar niveis de acesso ao token
+        // req.userLevel = user.level;
+        const search = await User.findById(req.userId)
+        if (!search) {
+            throw new JsonWebTokenError('Usuário não encontrado.');
+        }
         next();
     } catch (err: any) {
         if (err.name === 'JsonWebTokenError') {
-            return res.status(401).json({ message: 'Token invÃ¡lido.' });
+            res.clearCookie('token');
+            return res.status(401).json({ message: 'Token inválido.' });
         } else if (err.name === 'TokenExpiredError') {
+            res.clearCookie('token');
             return res.status(401).json({ message: 'Token expirado.' });
         } else {
             return res.status(500).json({ message: 'Falha ao autenticar token.', error: err.message });
@@ -30,5 +35,5 @@ export function verifyJWT(req: Request, res: Response, next: NextFunction) {
 }
 
 export function signJWT(object: Object | any) {
-    return jwt.sign(object, SECRET);
+    return jwt.sign({ ...object }, SECRET);
 }
